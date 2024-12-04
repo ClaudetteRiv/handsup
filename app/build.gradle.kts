@@ -2,8 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 
-    // Agrega el complemento de Google Services
     id("com.google.gms.google-services") // Agrega esta línea
+    // Aplicar el plugin de KAPT para Glide
+    id("kotlin-kapt")
 }
 
 android {
@@ -55,13 +56,17 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.activity)
 
+    implementation("androidx.cardview:cardview:1.0.0")
+    implementation("com.github.bumptech.glide:glide:4.15.1")
+    kapt("com.github.bumptech.glide:compiler:4.15.1")
+
     // Importa el Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
 
     // Agrega las dependencias para los productos de Firebase que deseas usar
     implementation("com.google.firebase:firebase-analytics-ktx") // Ejemplo: Firebase Analytics
     implementation("com.google.firebase:firebase-auth-ktx") // Ejemplo: Firebase Authentication
-    // Agrega otras dependencias de Firebase según tus necesidades
+    implementation("com.google.firebase:firebase-firestore") // Firebase Firestore
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
