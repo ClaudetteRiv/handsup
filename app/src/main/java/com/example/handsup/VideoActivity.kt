@@ -23,10 +23,15 @@ class VideoActivity : AppCompatActivity() {
         // Inicializamos el botón
         val btn = findViewById<Button>(R.id.btnLessonCompleted)
         btn.setOnClickListener {
-            // Navega al fragmento "fragment_home" con el NavController
+            btn.isEnabled = false  // Desactiva el botón temporalmente
+
             val navController = findNavController(R.id.nav_host_fragment_activity_main)
-            navController.navigate(R.id.navigation_home)  // Asegúrate de que el ID sea correcto
+            navController.navigate(R.id.navigation_home)
+
+            // Reactiva el botón después de la navegación
+            btn.postDelayed({ btn.isEnabled = true }, 1000) // Espera un tiempo para reactivar el botón
         }
+
 
         // Obtén el valor recibido del Intent
         val receivedValue = intent.getStringExtra("lesson_title")
