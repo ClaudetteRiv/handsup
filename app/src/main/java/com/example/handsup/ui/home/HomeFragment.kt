@@ -1,98 +1,68 @@
 package com.example.handsup.ui.home
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
+import LessonAdapter
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.handsup.R
-import com.example.handsup.databinding.FragmentNotificationsBinding
-import com.example.handsup.MainActivity
-import com.example.handsup.databinding.FragmentHomeBinding
+import com.example.handsup.model.Lesson
+import com.example.handsup.VideoActivity // Asegúrate de importar VideoActivity
 
 class HomeFragment : Fragment() {
 
-    private var _binding: FragmentHomeBinding? = null
-    private val binding get() = _binding!!
-    private val channelId = "1000"
+    private lateinit var recyclerView: RecyclerView
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        val notificationsViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
+    ): View? {
+        // Inflamos el layout del fragmento
+        val view = inflater.inflate(R.layout.fragment_home, container, false)
 
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
-        val root: View = binding.root
+        // Inicializamos el RecyclerView
+        recyclerView = view.findViewById(R.id.rv_lessons)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        val boton = binding.btnNotificaciones
-        boton.setOnClickListener {
-            createNot()
-            enviarNot()
+        // Datos de prueba para lecciones
+        val lessons = listOf(
+            Lesson("Abecedario", "Aprende el abecedario en Lengua de Señas Mexicana (LSM)",  R.drawable.maxresdefault, "Iniciar"),
+            Lesson("Números", "Aprende los números en Lengua de Señas Mexicana (LSM)", R.drawable.numeros, "Iniciar"),
+            Lesson("Colores", "Aprende los colores en Lengua de Señas Mexicana (LSM)", R.drawable.color, "Iniciar"),
+            Lesson("Frutas", "Aprende los nombres de frutas en Lengua de Señas Mexicana (LSM)", R.drawable.fruta, "Iniciar"),
+            Lesson("Animales", "Aprende los nombres de animales en Lengua de Señas Mexicana (LSM)", R.drawable.animal, "Iniciar")
+        )
+
+        recyclerView.adapter = LessonAdapter(lessons) { lesson ->
+            // Acción al presionar el botón
+            Toast.makeText(requireContext(), "Iniciando: ${lesson.title}", Toast.LENGTH_SHORT).show()
+
+            // Crear el Intent para ir a VideoActivity
+            val intent = Intent(requireContext(), VideoActivity::class.java).apply {
+                putExtra("lesson_title", lesson.title) // Pasar el título de la lección
+                putExtra("lesson_description", lesson.description) // Pasar la descripción
+            }
+
+            // Deshabilitar el botón para evitar múltiples clics
+            recyclerView.isEnabled = false
+
+            Log.d("HomeFragment", "Intent: $intent")
+            startActivity(intent)
+
+
+            // Habilitar el RecyclerView nuevamente después de un pequeño delay
+            recyclerView.postDelayed({
+                recyclerView.isEnabled = true
+            }, 500) // Tiempo de espera para reactivar el RecyclerView
         }
 
-        return root
-    }
 
-    private fun createNot() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Canal 1000"
-            val description = "Canal de Notificaciones"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(channelId, name, importance).apply {
-                this.description = description
-            }
-            val notificationManager = activity?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
-
-    private fun enviarNot() {
-        val mensaje = "Sigue aprendiendo LSM"
-        if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
-        } else {
-            val intent = Intent(requireContext(), MainActivity::class.java).apply { // Cambia a MainActivity
-                putExtra("notification_message", mensaje)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-            val pendingIntent: PendingIntent = PendingIntent.getActivity(
-                requireContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-            )
-
-            val builder = NotificationCompat.Builder(requireContext(), channelId)
-                .setSmallIcon(R.drawable.ic_hand)
-                .setContentTitle("Tus Tareas")
-                .setContentText(mensaje)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setContentIntent(pendingIntent)
-                .setAutoCancel(true)
-
-            Log.d("Notifications", "Notificación Enviada")
-            with(NotificationManagerCompat.from(requireContext())) {
-                notify(1, builder.build())
-            }
-        }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+        return view
     }
 }
